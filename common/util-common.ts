@@ -164,6 +164,21 @@ export function genSecret(length = 64) {
 }
 
 /**
+ * Generate a random string suitable for API keys, tokens, or secrets
+ * @param length Length of string to generate
+ * @returns Random string
+ */
+export function generateRandomString(length = 32) {
+    let result = "";
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const charsLength = chars.length;
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(getCryptoRandomInt(0, charsLength - 1));
+    }
+    return result;
+}
+
+/**
  * Get a random integer suitable for use in cryptography between upper
  * and lower bounds.
  * @param min Minimum value of integer
