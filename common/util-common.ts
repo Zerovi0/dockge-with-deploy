@@ -49,6 +49,18 @@ export const ALL_ENDPOINTS = "##ALL_DOCKGE_ENDPOINTS##";
 export const UNKNOWN = 0;
 export const CREATED_FILE = 1;
 export const CREATED_STACK = 2;
+
+// Build Status
+export const BUILD_REQUESTED = 'requested';
+export const BUILD_QUEUED = 'queued';
+export const BUILD_IN_PROGRESS = 'in_progress';
+export const BUILD_COMPLETED = 'completed';
+export const BUILD_FAILED = 'failed';
+
+// Deployment Status
+export const DEPLOYMENT_IN_PROGRESS = 'in_progress';
+export const DEPLOYMENT_SUCCEEDED = 'succeeded';
+export const DEPLOYMENT_FAILED = 'failed';
 export const RUNNING = 3;
 export const EXITED = 4;
 

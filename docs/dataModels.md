@@ -50,42 +50,43 @@ enum GitProvider {
 The `BuildConfig` model defines how to build a stack from a Git repository.
 
 ```typescript
-interface BuildConfig {
-  id: string;                     // Unique identifier for the build configuration
-  stackId: string;                // ID of the associated stack
-  repositoryId: string;           // ID of the associated Git repository
-  buildType: BuildType;           // Type of build process
-  dockerfilePath?: string;        // Path to Dockerfile (relative to repository root)
-  composePath?: string;           // Path to docker-compose.yml (relative to repository root)
-  buildArgs?: BuildArg[];         // Build arguments for Docker builds
-  preBuildCommands?: string[];    // Commands to run before the build
-  postBuildCommands?: string[];   // Commands to run after the build
-  environmentVariables?: EnvVar[]; // Environment variables for the build
-  timeout: number;                // Build timeout in seconds
-  autoDeployOnPush: boolean;      // Whether to automatically deploy on push
-  autoDeployBranches?: string[];  // Branches to automatically deploy (regex patterns)
-  healthCheckPath?: string;       // Path to health check endpoint
-  healthCheckTimeout?: number;    // Timeout for health check in seconds
-  rollbackOnFailure: boolean;     // Whether to rollback on deployment failure
-  createdAt: Date;                // When the configuration was created
-  updatedAt: Date;                // When the configuration was last updated
+class BuildConfig {
+  id: number = 0;                          // Unique identifier for the build configuration
+  stackId: string = "";                    // ID of the associated stack
+  repositoryId: number = 0;                // ID of the associated Git repository
+  buildType: string = "compose_only";      // Type of build process ('docker_build', 'compose_only', 'script')
+  dockerfilePath: string = "Dockerfile";   // Path to Dockerfile (relative to repository root)
+  composePath: string = "docker-compose.yml"; // Path to docker-compose.yml (relative to repository root)
+  timeout: number = 3600;                  // Build timeout in seconds
+  autoDeployOnPush: boolean = false;       // Whether to automatically deploy on push
+  autoDeployBranches: string = "[]";       // JSON array of branch patterns to automatically deploy
+  healthCheckPath: string | null = null;   // Path to health check endpoint
+  healthCheckTimeout: number | null = null; // Timeout for health check in seconds
+  rollbackOnFailure: boolean = true;       // Whether to rollback on deployment failure
+  preBuildCommands: string | null = null;  // JSON array of commands to run before the build
+  postBuildCommands: string | null = null; // JSON array of commands to run after the build
+  createdAt: Date = new Date();            // When the configuration was created
+  updatedAt: Date = new Date();            // When the configuration was last updated
 }
 
-enum BuildType {
-  DOCKER_BUILD = 'docker_build',  // Build a Docker image from a Dockerfile
-  COMPOSE_ONLY = 'compose_only',  // Use existing images in docker-compose.yml
-  SCRIPT = 'script'               // Run a custom build script
-}
-
+// Note: BuildArgs and EnvVars are stored in separate tables with relations to BuildConfig
 interface BuildArg {
+  id: number;                     // Unique identifier
+  buildConfigId: number;          // ID of the associated build configuration
   name: string;                   // Name of the build argument
   value: string;                  // Value of the build argument
+  createdAt: Date;                // When created
+  updatedAt: Date;                // When updated
 }
 
 interface EnvVar {
+  id: number;                     // Unique identifier
+  buildConfigId: number;          // ID of the associated build configuration
   name: string;                   // Name of the environment variable
   value: string;                  // Value of the environment variable
   secret: boolean;                // Whether this is a secret variable
+  createdAt: Date;                // When created
+  updatedAt: Date;                // When updated
 }
 ```
 
@@ -94,43 +95,29 @@ interface EnvVar {
 The `Deployment` model represents a single deployment of a stack.
 
 ```typescript
-interface Deployment {
-  id: string;                     // Unique identifier for the deployment
-  stackId: string;                // ID of the associated stack
-  buildConfigId: string;          // ID of the build configuration used
-  repositoryId: string;           // ID of the Git repository
-  commitSha: string;              // Git commit SHA that was deployed
-  commitMessage?: string;         // Git commit message
-  commitAuthor?: string;          // Git commit author
-  branch: string;                 // Git branch that was deployed
-  tag?: string;                   // Git tag that was deployed (if any)
-  status: DeploymentStatus;       // Current status of the deployment
-  startedAt: Date;                // When the deployment started
-  completedAt?: Date;             // When the deployment completed
-  duration?: number;              // Duration of the deployment in seconds
-  buildLogs?: string;             // Logs from the build process
-  deploymentLogs?: string;        // Logs from the deployment process
-  error?: string;                 // Error message if deployment failed
-  triggeredBy: TriggerType;       // What triggered the deployment
-  triggeredByUser?: string;       // User who triggered the deployment (if manual)
-  previousDeploymentId?: string;  // ID of the previous deployment (for rollbacks)
-}
-
-enum DeploymentStatus {
-  PENDING = 'pending',
-  BUILDING = 'building',
-  DEPLOYING = 'deploying',
-  SUCCESSFUL = 'successful',
-  FAILED = 'failed',
-  ROLLED_BACK = 'rolled_back',
-  CANCELLED = 'cancelled'
-}
-
-enum TriggerType {
-  WEBHOOK = 'webhook',
-  MANUAL = 'manual',
-  SCHEDULED = 'scheduled',
-  API = 'api'
+class Deployment {
+  id: number = 0;                          // Unique identifier for the deployment
+  stackId: string = "";                    // ID of the associated stack
+  buildConfigId: number = 0;               // ID of the build configuration used
+  repositoryId: number = 0;                // ID of the Git repository
+  commitSha: string = "";                  // Git commit SHA that was deployed
+  commitMessage: string | null = null;     // Git commit message
+  commitAuthor: string | null = null;      // Git commit author
+  branch: string = "";                     // Git branch that was deployed
+  tag: string | null = null;               // Git tag that was deployed (if any)
+  status: string = "pending";              // Current status of the deployment
+                                           // ('pending', 'building', 'deploying', 'successful', 'failed', 'rolled_back', 'cancelled')
+  startedAt: Date = new Date();            // When the deployment started
+  completedAt: Date | null = null;         // When the deployment completed
+  duration: number | null = null;          // Duration of the deployment in seconds
+  buildLogs: string | null = null;         // Logs from the build process
+  deploymentLogs: string | null = null;    // Logs from the deployment process
+  error: string | null = null;             // Error message if deployment failed
+  triggeredBy: string = "manual";          // What triggered the deployment ('webhook', 'manual', 'scheduled', 'api')
+  triggeredByUser: string | null = null;   // User who triggered the deployment (if manual)
+  previousDeploymentId: number | null = null; // ID of the previous deployment (for rollbacks)
+  createdAt: Date = new Date();            // When the deployment record was created
+  updatedAt: Date = new Date();            // When the deployment record was last updated
 }
 ```
 
@@ -139,20 +126,20 @@ enum TriggerType {
 The `WebhookEvent` model stores information about received webhook events.
 
 ```typescript
-interface WebhookEvent {
-  id: string;                     // Unique identifier for the webhook event
-  repositoryId: string;           // ID of the associated Git repository
-  provider: GitProvider;          // Git provider that sent the webhook
-  eventType: string;              // Type of event (push, pull_request, etc.)
-  payload: object;                // Raw webhook payload
-  headers: object;                // HTTP headers of the webhook request
-  signature?: string;             // Signature from the webhook provider
-  verified: boolean;              // Whether the webhook was verified
-  processed: boolean;             // Whether the webhook was processed
-  deploymentId?: string;          // ID of the deployment triggered by this webhook
-  receivedAt: Date;               // When the webhook was received
-  processedAt?: Date;             // When the webhook was processed
-  error?: string;                 // Error message if processing failed
+class WebhookEvent {
+  id: number = 0;                          // Unique identifier for the webhook event
+  repositoryId: number = 0;                // ID of the associated Git repository
+  provider: string = "generic";            // Git provider that sent the webhook ('github', 'gitlab', 'bitbucket', 'generic')
+  eventType: string = "";                  // Type of event (push, pull_request, etc.)
+  payload: string = "";                    // JSON webhook payload
+  headers: string = "";                    // JSON HTTP headers
+  signature: string | null = null;         // Signature from the webhook provider
+  verified: boolean = false;               // Whether the webhook was verified
+  processed: boolean = false;              // Whether the webhook was processed
+  deploymentId: number | null = null;      // ID of the deployment triggered by this webhook
+  receivedAt: Date = new Date();           // When the webhook was received
+  processedAt: Date | null = null;         // When the webhook was processed
+  error: string | null = null;             // Error message if processing failed
 }
 ```
 
@@ -171,7 +158,7 @@ interface StackCICDExtension {
 
 ## Database Schema
 
-These models will be stored in the SQLite database used by Dockge. The following tables will be created:
+These models will be stored in the SQLite database used by Dockge. The following tables have been created via migrations:
 
 1. `git_repositories` - Stores Git repository configurations
 2. `build_configs` - Stores build configurations
@@ -179,6 +166,8 @@ These models will be stored in the SQLite database used by Dockge. The following
 4. `webhook_events` - Stores webhook events
 5. `build_args` - Stores build arguments (related to build_configs)
 6. `env_vars` - Stores environment variables (related to build_configs)
+
+All migration files are located in `/backend/migrations/` with timestamps and descriptive names.
 
 ## File Storage
 

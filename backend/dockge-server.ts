@@ -37,6 +37,9 @@ import { AgentSocketHandler } from "./agent-socket-handler";
 import { AgentSocket } from "../common/agent-socket";
 import { ManageAgentSocketHandler } from "./socket-handlers/manage-agent-socket-handler";
 import { Terminal } from "./terminal";
+import { GitHandler } from "./git/git-handler";
+import { WebhookHandler } from "./git/webhook-handler";
+import { BuildEngine } from "./git/build-engine";
 
 export class DockgeServer {
     app : Express;
@@ -79,6 +82,21 @@ export class DockgeServer {
     jwtSecret : string = "";
 
     stacksDir : string = "";
+    
+    /**
+     * Git handler instance
+     */
+    gitHandler: GitHandler;
+    
+    /**
+     * Webhook handler instance
+     */
+    webhookHandler: WebhookHandler;
+    
+    /**
+     * Build engine instance
+     */
+    buildEngine: BuildEngine;
 
     /**
      *
@@ -292,6 +310,160 @@ export class DockgeServer {
             // ***************************
             // Better do anything after added all socket handlers here
             // ***************************
+            
+            // Git Repository event handlers
+            dockgeSocket.on("saveGitRepository", async (data, callback) => {
+                try {
+                    if (!this.gitHandler) {
+                        throw new Error("Git functionality not available");
+                    }
+                    
+                    // Check user permission
+                    if (!await this.checkUserAuthority(dockgeSocket)) {
+                        return callback({
+                            ok: false,
+                            msg: "Unauthorized"
+                        });
+                    }
+                    
+                    log.debug("git", `Saving Git repository for stack: ${data.stackName}`);
+                    const result = await this.gitHandler.saveGitRepository(data);
+                    callback({
+                        ok: true,
+                        repository: result
+                    });
+                } catch (error) {
+                    log.error("git", `Error saving git repository: ${error}`);
+                    callback({
+                        ok: false,
+                        msg: error.message
+                    });
+                }
+            });
+            
+            dockgeSocket.on("getGitRepository", async (stackName, callback) => {
+                try {
+                    if (!this.gitHandler) {
+                        throw new Error("Git functionality not available");
+                    }
+                    
+                    log.debug("git", `Getting Git repository for stack: ${stackName}`);
+                    const repository = await this.gitHandler.getGitRepository(stackName);
+                    callback({
+                        ok: true,
+                        repository: repository
+                    });
+                } catch (error) {
+                    log.error("git", `Error getting git repository: ${error}`);
+                    callback({
+                        ok: false,
+                        msg: error.message
+                    });
+                }
+            });
+            
+            // Build configuration event handlers
+            dockgeSocket.on("saveBuildConfig", async (data, callback) => {
+                try {
+                    if (!this.buildEngine) {
+                        throw new Error("Build functionality not available");
+                    }
+                    
+                    // Check user permission
+                    if (!await this.checkUserAuthority(dockgeSocket)) {
+                        return callback({
+                            ok: false,
+                            msg: "Unauthorized"
+                        });
+                    }
+                    
+                    log.debug("build", `Saving build config for stack: ${data.stackName}`);
+                    const result = await this.buildEngine.saveBuildConfig(data);
+                    callback({
+                        ok: true,
+                        buildConfig: result
+                    });
+                } catch (error) {
+                    log.error("build", `Error saving build config: ${error}`);
+                    callback({
+                        ok: false,
+                        msg: error.message
+                    });
+                }
+            });
+            
+            dockgeSocket.on("getBuildConfig", async (stackName, callback) => {
+                try {
+                    if (!this.buildEngine) {
+                        throw new Error("Build functionality not available");
+                    }
+                    
+                    log.debug("build", `Getting build config for stack: ${stackName}`);
+                    const buildConfig = await this.buildEngine.getBuildConfig(stackName);
+                    callback({
+                        ok: true,
+                        buildConfig: buildConfig
+                    });
+                } catch (error) {
+                    log.error("build", `Error getting build config: ${error}`);
+                    callback({
+                        ok: false,
+                        msg: error.message
+                    });
+                }
+            });
+            
+            // Deployment history event handlers
+            dockgeSocket.on("getDeploymentHistory", async (stackName, callback) => {
+                try {
+                    if (!this.buildEngine) {
+                        throw new Error("Build functionality not available");
+                    }
+                    
+                    log.debug("deployment", `Getting deployment history for stack: ${stackName}`);
+                    const history = await this.buildEngine.getDeploymentHistory(stackName);
+                    callback({
+                        ok: true,
+                        history: history
+                    });
+                } catch (error) {
+                    log.error("deployment", `Error getting deployment history: ${error}`);
+                    callback({
+                        ok: false,
+                        msg: error.message
+                    });
+                }
+            });
+            
+            // Manual build trigger
+            dockgeSocket.on("triggerBuild", async (data, callback) => {
+                try {
+                    if (!this.buildEngine) {
+                        throw new Error("Build functionality not available");
+                    }
+                    
+                    // Check user permission
+                    if (!await this.checkUserAuthority(dockgeSocket)) {
+                        return callback({
+                            ok: false,
+                            msg: "Unauthorized"
+                        });
+                    }
+                    
+                    log.debug("build", `Manually triggering build for stack: ${data.stackName}`);
+                    const buildId = await this.buildEngine.triggerManualBuild(data.stackName);
+                    callback({
+                        ok: true,
+                        buildId: buildId
+                    });
+                } catch (error) {
+                    log.error("build", `Error triggering build: ${error}`);
+                    callback({
+                        ok: false,
+                        msg: error.message
+                    });
+                }
+            });
 
             log.debug("auth", "check auto login");
             if (await Settings.get("disableAuth")) {
@@ -380,6 +552,28 @@ export class DockgeServer {
             log.info("server", "No user, need setup");
             this.needSetup = true;
         }
+        
+        // Initialize Git handler
+        log.info("server", "Initializing Git handler");
+        this.gitHandler = new GitHandler(this.config.dataDir);
+        
+        // Initialize webhook handler
+        log.info("server", "Initializing webhook handler");
+        this.webhookHandler = new WebhookHandler(this, this.gitHandler);
+        
+        // Initialize build engine
+        log.info("server", "Initializing build engine");
+        this.buildEngine = new BuildEngine(this, this.gitHandler);
+        
+        // Set up webhook routes
+        this.app.post("/api/webhooks/:id", async (req, res) => {
+            try {
+                await this.webhookHandler.handleWebhook(req, res);
+            } catch (error) {
+                log.error("webhook", `Error handling webhook: ${error}`);
+                res.status(500).json({ error: "Internal server error" });
+            }
+        });
 
         // Listen
         this.httpServer.listen(this.config.port, this.config.hostname, () => {
@@ -645,6 +839,22 @@ export class DockgeServer {
         log.info("server", "Called signal: " + signal);
 
         // TODO: Close all terminals?
+        
+        // Shutdown Git-related components if they exist
+        if (this.buildEngine) {
+            log.info("server", "Stopping build engine");
+            // Any cleanup needed for build engine
+        }
+        
+        if (this.webhookHandler) {
+            log.info("server", "Stopping webhook handler");
+            // Any cleanup needed for webhook handler
+        }
+        
+        if (this.gitHandler) {
+            log.info("server", "Stopping git handler");
+            // Any cleanup needed for git handler
+        }
 
         await Database.close();
         Settings.stopCacheCleaner();
@@ -687,4 +897,36 @@ export class DockgeServer {
         return `${protocol}://${host}:${this.config.port}`;
     }
 
+    /**
+     * Check if the user has authority to perform operations requiring elevated privileges
+     * such as Git repository management, build configuration, and deployment.
+     * @param socket The socket connection of the user
+     * @returns True if user is authorized, false otherwise
+     */
+    async checkUserAuthority(socket: DockgeSocket): Promise<boolean> {
+        // If disableAuth is enabled, all users are authorized
+        if (await Settings.get("disableAuth")) {
+            return true;
+        }
+        
+        // Check if user is logged in
+        if (!socket.userID) {
+            log.warn("auth", `Unauthorized access attempt from ${await this.getClientIP(socket)}`);
+            return false;
+        }
+        
+        // Get user from database to check role
+        const user = await R.findOne("user", " id = ? ", [
+            socket.userID,
+        ]);
+        
+        if (!user) {
+            log.warn("auth", `User not found for ID: ${socket.userID}`);
+            return false;
+        }
+        
+        // Currently in Dockge all logged in users have the same level of authority
+        // This can be extended in the future to support role-based access control
+        return true;
+    }
 }

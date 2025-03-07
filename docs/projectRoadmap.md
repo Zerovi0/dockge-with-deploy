@@ -7,15 +7,15 @@ Extend the custom Dockge build to incorporate a seamless CI/CD pipeline directly
 
 ### 1. Native Git Integration
 - [ ] Create frontend components for git repository configuration
-- [ ] Implement Git provider authentication mechanisms
+- [x] Implement Git provider authentication mechanisms
 - [ ] Develop webhook receiver for Git events
 - [ ] Add support for multiple Git providers (GitHub, GitLab, Bitbucket, Gitea)
 - [ ] Implement branch-specific deployment rules
 
 ### 2. Build Pipeline Support
-- [ ] Design build workflow engine
-- [ ] Implement customizable build configurations
-- [ ] Add pre/post build command support
+- [x] Design build workflow engine
+- [x] Implement customizable build configurations
+- [x] Add pre/post build command support
 - [ ] Create build logs and monitoring interface
 - [ ] Support Docker and non-Docker build processes
 
@@ -48,7 +48,24 @@ Extend the custom Dockge build to incorporate a seamless CI/CD pipeline directly
 7. Resource usage remains efficient during idle periods
 
 ## Completed Tasks
-No tasks have been completed yet. This project is starting from the original Dockge codebase.
+
+### Data Model Implementation
+- [x] Implemented GitRepository model for storing repository configuration
+- [x] Implemented BuildConfig model for build process configuration
+- [x] Implemented Deployment model for tracking build and deployment processes
+- [x] Implemented WebhookEvent model for handling Git provider callbacks
+- [x] Created database migration scripts for all new models
+
+### Planned Frontend Components
+- [ ] Create GitRepository.vue for repository configuration
+- [ ] Create BuildConfig.vue for build settings
+- [ ] Create DeploymentHistory.vue for history and logs
+- [ ] Integrate all components into Compose.vue
+
+### Backend Implementation
+- [x] Implemented DockgeServer.checkUserAuthority for validating user permissions
+- [ ] Implemented BuildEngine for handling build configurations and deployment (in progress)
+- [ ] Added socket event handlers for Git functionality (in progress)
 
 ## Future Considerations
 - Integration with notification systems (Slack, Discord, email)

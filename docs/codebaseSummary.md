@@ -24,6 +24,7 @@ Dockge is built as a full-stack application with a clear separation between fron
   - Socket.io server
   - Routers and socket handlers
   - Database connections
+  - Git integration endpoints (newly added)
 - **stack.ts** - Core class for stack management with methods for:
   - Creating/reading/updating/deleting stacks
   - Deploying stacks with Docker Compose
@@ -34,7 +35,16 @@ Dockge is built as a full-stack application with a clear separation between fron
   - agent-proxy-socket-handler.ts - Proxies requests to agents
   - manage-agent-socket-handler.ts - Manages agent connections
 - **routers/** - Express routes for HTTP endpoints
-- **models/** - Data models for the application
+- **models/** - Data models for the application:
+  - git-repository.ts - Manages Git repository configurations
+  - build-config.ts - Manages build configurations
+  - deployment.ts - Tracks deployments and their states
+  - webhook-event.ts - Handles incoming webhook events
+- **git/** - New Git integration components in development:
+  - build-engine.ts - Manages the build and deployment process (in progress)
+  - webhook-handler.ts - Processes webhook events (in progress)
+  - git-auth.ts - Handles authentication with Git providers (in progress)
+  - git-providers/ - Provider-specific implementations (in progress)
 - **terminal.ts** - Manages terminal sessions and command execution
 
 ## Current Data Flow
@@ -112,7 +122,28 @@ Dockge is built as a full-stack application with a clear separation between fron
 6. Deployment history will be stored in the database and displayed to the user
 
 ## Recent Changes
-- Set up project documentation structure
-- Analyzed client requirements for CI/CD integration
-- Identified integration points in the existing codebase
-- Created initial project roadmap and technical stack documentation
+
+### Data Models Implementation
+- Implemented GitRepository model for Git repository configuration storage
+- Implemented BuildConfig model for build process configuration
+- Implemented Deployment model for tracking build and deployment processes
+- Implemented WebhookEvent model for handling Git provider webhooks
+- Created database migration scripts for all new models
+
+### Backend Components Implementation
+- Started BuildEngine class for handling build configurations and deployment (in progress)
+- Started GitAuth module for handling authentication with Git providers (in progress)
+- Designed webhook handling infrastructure (not fully implemented)
+- Designed provider-specific Git implementations for GitHub and others (in progress)
+- Planned socket event handlers for Git functionality (not yet fully implemented)
+
+### Frontend Components (Planned, Not Yet Implemented)
+- Planning GitRepository.vue for repository configuration
+- Planning BuildConfig.vue for build settings
+- Planning DeploymentHistory.vue for deployment history and logs
+- Will integrate components into Compose.vue when implemented
+
+### Documentation
+- Updated data models documentation to match implementation
+- Updated project roadmap to reflect completed tasks
+- Enhanced technical specifications with implementation details

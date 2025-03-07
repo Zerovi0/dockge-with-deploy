@@ -48,5 +48,11 @@ We are starting with the original Dockge codebase with no existing CI/CD functio
    - Deployment manager
 5. ✅ Design the frontend components for Git repository management and build configuration
 6. ✅ Create database migration scripts for the new data models
-7. Implement the first set of backend components for Git repository management
-8. Implement the first set of frontend components for Git repository configuration
+7. ✅ Implement model classes for BuildConfig, Deployment, and WebhookEvent
+8. Continue implementation of the BuildEngine class
+9. Implement the webhook receiver component
+10. Implement Git provider handlers (GitHub, GitLab, etc.)
+11. Implement socket event handlers for Git functionality
+12. Implement frontend components for Git repository configuration
+13. Create unit tests for backend components
+14. Integrate the frontend with the backend functionality

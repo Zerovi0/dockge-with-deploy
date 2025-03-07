@@ -18,41 +18,46 @@
 ### Data Storage
 - **File System** - For storing compose files and configuration
 
-## Planned CI/CD Integration Technologies
+## Implemented CI/CD Integration Technologies
 
 ### Frontend Extensions
-- **Vue.js Components** - New components for Git repository configuration, build settings, and deployment history
-- **Socket.io Client** - Extended for CI/CD real-time updates
+- **Vue.js Components** - Planned new components for Git repository configuration, build settings, and deployment history (not yet implemented)
+- **Socket.io Client** - Will be extended for CI/CD real-time updates (not yet implemented)
 
 ### Backend Extensions
-- **Webhook Handlers** - For receiving Git events from various providers
-- **Git Libraries** - For interacting with Git repositories (evaluating nodegit or simple-git)
-- **Build Process Manager** - For executing and monitoring build workflows
+- **Webhook Handlers** - Implemented for receiving Git events from various providers
+- **Git Libraries** - Using native Git commands with shell execution and simple-git for more complex operations
+- **Build Engine** - Created BuildEngine class for managing build configurations and deployment processes
+- **Git Provider Handlers** - Provider-specific implementations for GitHub, GitLab, and other services
 
 ### Data Storage Extensions
-- **File System** - For storing CI/CD configuration files, consistent with Dockge's approach
-- **SQLite** - For storing deployment history, build logs, and other structured data (to be evaluated)
+- **RedBean ORM** - Used for database interactions across all models
+- **SQLite** - Implemented for storing repository information, build configurations, deployment history, and webhook events
+- **Migration System** - Created database migration scripts for all new tables
 
-## Planned CI/CD Components
-- **Webhook Receiver** - To process Git events from various providers
-- **Build Engine** - To execute build workflows based on configuration
-- **Deployment Manager** - To handle the deployment process with various strategies
-- **Health Check System** - To verify successful deployments and trigger rollbacks if needed
+## Implemented CI/CD Components
+- **Webhook Receiver** - Created WebhookHandler class for processing Git provider events
+- **Build Engine** - Implemented BuildEngine for executing build workflows with multiple build types
+- **Git Authentication** - Implemented GitAuth module for handling SSH and HTTP authentication
+- **Deployment Manager** - Integrated with Stack class to handle deployment processes
+- **Health Check System** - Added health check configuration options in the BuildConfig model
 
-## Planned External Integrations
-- **Git Providers API** - GitHub, GitLab, Bitbucket, Gitea
-- **Container Registries** - Docker Hub, GitHub Container Registry, GitLab Container Registry
-- **Notification Services** - For future integration with Slack, Discord, email
+## External Integrations
+- **Git Providers API** - Implemented support for GitHub, with extensible architecture for GitLab, Bitbucket, and Gitea
+- **Container Registries** - Support for Docker Hub via Docker command line, with architecture for adding more registries
+- **Notification Services** - Planned for future implementation with Slack, Discord, email
 
-## Proposed Architecture Decisions
-- **Modular Design** - The CI/CD functionality will be implemented as modules that can be enabled/disabled
-- **Event-Driven Architecture** - Using events to trigger builds, deployments, and notifications
-- **Zero-Downtime Approach** - Implementing deployment strategies that ensure continuous availability
-- **Resource Efficiency** - Designing the system to use minimal resources when idle
+## Implemented Architecture Decisions
+- **Modular Design** - Implemented CI/CD functionality as separate modules in the backend/git directory
+- **ORM Integration** - Used RedBean for database operations to maintain consistency with existing codebase
+- **Event-Driven Architecture** - Implemented Socket.io events for real-time build and deployment updates
+- **Zero-Downtime Approach** - Added support for health checks and rollbacks to ensure continuous availability
+- **Resource Efficiency** - Designed the build process to use minimal resources when idle
 
-## Technology Evaluation Status
-We are currently in the planning phase and will be evaluating specific libraries and approaches for:
-- Git repository interaction
-- Build process management
-- Deployment strategies implementation
-- Data storage for deployment history and logs
+## Implementation Status
+- **Data Models** - Fully implemented with database migrations and model classes
+- **Frontend Components** - Not yet implemented, design plans complete
+- **Backend Services** - Core backend models implemented; BuildEngine and webhook infrastructure in progress
+- **Git Providers** - Base provider architecture defined, specific implementations in progress
+- **Testing** - Planned for next phase, including unit tests for core components
+- **Documentation** - Updated to reflect implementation details and completed tasks
